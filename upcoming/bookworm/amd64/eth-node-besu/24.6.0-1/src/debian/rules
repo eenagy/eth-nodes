@@ -1,6 +1,7 @@
 #!/usr/bin/make -f
 export GIT_COMMIT=c3f7f87
-export BUILD_DATE=2024-07-03T18:29Z
+export GIT_VERSION=24.6.0
+export BUILD_DATE=2024-07-03T19:43Z
 
 %:
 	dh $@
