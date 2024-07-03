@@ -174,6 +174,34 @@ replace_in_files() {
     done
 }
 
+replace_git_submodules_in_file() {
+    local file=$1
+    local pattern=$2
+    local replacement=$3
+    echo "pattern: $pattern, replacement: $replacement"
+
+    # Escape special characters in the pattern for awk
+    escaped_pattern=$(echo "$pattern" | sed 's/[][\\.^$*]/\\&/g')
+
+    # Perform the replacement using awk
+    awk -v pattern="$escaped_pattern" -v replacement="submodules = $replacement" '
+        BEGIN { found = 0 }
+        {
+            if ($0 ~ pattern && !found) {
+                print replacement
+                found = 1
+            } else {
+                print $0
+            }
+        }
+    ' "$file" > tmp && mv tmp "$file"
+
+    if [ $? -ne 0 ]; then
+        echo "Error: awk failed for file $file with pattern $pattern"
+        return 1
+    fi
+}
+
 HELP=false
 CLIENT_NAME=""
 CODENAME=""
@@ -223,33 +251,7 @@ if ! is_supported "$CODENAME" "${SUPPORTED_CODENAMES[@]}"; then
     exit 1
 fi
 
-replace_git_submodules_in_file() {
-    local file=$1
-    local pattern=$2
-    local replacement=$3
-    echo "pattern: $pattern, replacement: $replacement"
 
-    # Escape special characters in the pattern for awk
-    escaped_pattern=$(echo "$pattern" | sed 's/[][\\.^$*]/\\&/g')
-
-    # Perform the replacement using awk
-    awk -v pattern="$escaped_pattern" -v replacement="submodules = $replacement" '
-        BEGIN { found = 0 }
-        {
-            if ($0 ~ pattern && !found) {
-                print replacement
-                found = 1
-            } else {
-                print $0
-            }
-        }
-    ' "$file" > tmp && mv tmp "$file"
-
-    if [ $? -ne 0 ]; then
-        echo "Error: awk failed for file $file with pattern $pattern"
-        return 1
-    fi
-}
 
 function main(){
     CLIENT_REPOSITORY=${REPOSITORIES[$CLIENT_NAME]}
@@ -288,9 +290,15 @@ function main(){
     cp -R "$TEMPLATE_DIR"/* "$UPCOMING_DIR"
     DOWNLOAD_URL=$(get_download_url "$LATEST_RELEASE" )
     CLIENT_PACKAGE_HASH=$(get_hash "$DOWNLOAD_URL")
-
+    VERSION_MAJOR=
+    VERSION_MINOR=
+    VERSION_BUILD=
+    
     if [ "$CLIENT_NAME" = "nimbus-eth2" ];then 
       GIT_SUBMODULES=$(get_submodules_for_tag "$CLIENT_REPOSITORY" "$TAG_NAME")
+      VERSION_MAJOR=$(echo "$CLIENT_VERSION" | cut -d '.' -f 1)
+      VERSION_MINOR=$(echo "$CLIENT_VERSION" | cut -d '.' -f 2)
+      VERSION_BUILD=$(echo "$CLIENT_VERSION" | cut -d '.' -f 3)
       replace_git_submodules_in_file "$UPCOMING_DIR/pkg-builder.toml" "<GIT_SUBMODULES>" "$GIT_SUBMODULES"
     fi 
 
@@ -306,6 +314,9 @@ function main(){
         ["<BUILD_DATE>"]="$BUILD_DATE"
         ["<BUILD_DATE_UTC>"]="$BUILD_DATE_UTC"
         ["<BUILD_DATE_UNIX_TIMESTAMP>"]="$BUILD_DATE_UNIX_TIMESTAMP"
+        ["<VERSION_MAJOR>"]="$VERSION_MAJOR"
+        ["<VERSION_MINOR>"]="$VERSION_MINOR"
+        ["<VERSION_BUILD>"]="$VERSION_BUILD"
     )
 
     for key in "${!REPLACEMENTS[@]}"; do
