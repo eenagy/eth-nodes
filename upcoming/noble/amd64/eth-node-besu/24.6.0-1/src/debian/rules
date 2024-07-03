@@ -2,7 +2,7 @@
 # conditionally enable tests, default is true
 # there are times you want to do quick rebuilding to verify hash without running the tests
 export GIT_COMMIT=c3f7f87
-export BUILD_DATE=2024-07-03T17:22Z
+export BUILD_DATE=2024-07-03T18:29Z
 %:
 	dh $@
 
