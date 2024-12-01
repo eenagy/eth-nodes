@@ -1,13 +1,14 @@
 name: Verify
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - verify/**
 
 jobs:
   verify:
-    runs-on: ubuntu-24.04
+    runs-on: self-hosted
     permissions:
       contents: write
       issues: write
