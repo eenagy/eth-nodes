@@ -88,7 +88,7 @@ jobs:
       - name: Create chroot env
         run: |
           cd ${{ steps.env.outputs.tag_name }}
-          #sudo ln -s /usr/share/debootstrap/scripts/gutsy /usr/share/debootstrap/scripts/noble
+          [ ! -f /usr/share/debootstrap/scripts/noble ] && sudo ln -s /usr/share/debootstrap/scripts/gutsy /usr/share/debootstrap/scripts/noble
           pkg-builder env create
           echo "${HOME}/.cache/sbuild/${{ steps.env.outputs.codename }}-${{steps.env.outputs.build_arch}}.tar.gz" >> $GITHUB_PATH
 
