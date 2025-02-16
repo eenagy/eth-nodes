@@ -1,9 +1,9 @@
 name: regtest
 
-on:
-  push:
-    branches:
-      - fix/regtest-daily
+# on:
+#   push:
+#     branches:
+#       - fix/regtest-daily
 
 jobs:
   test:
